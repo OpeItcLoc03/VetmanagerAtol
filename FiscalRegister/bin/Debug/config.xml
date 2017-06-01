@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VMSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ApiKey>xjayrallehxpk66vdgfbgjv75sm83ncz</ApiKey>
+  <Url>https://dev.vetmanager.ru</Url>
+  <StartAfterRun>true</StartAfterRun>
+  <Device>
+    <DeviceNumber>1</DeviceNumber>
+    <DeviceName>АТОЛ 11Ф, №00106707168906</DeviceName>
+    <MachineName />
+    <AccessPassword />
+    <WriteLogFile>0</WriteLogFile>
+    <HostAddress>192.168.10.1:5555</HostAddress>
+    <InvertDrawerState>0</InvertDrawerState>
+    <Model>67</Model>
+    <UseAccessPassword>0</UseAccessPassword>
+    <DefaultPassword>30</DefaultPassword>
+    <PortNumber>67</PortNumber>
+    <BaudRate>18</BaudRate>
+  </Device>
+</VMSettings>

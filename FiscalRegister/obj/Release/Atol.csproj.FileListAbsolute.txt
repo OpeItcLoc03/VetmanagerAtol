@@ -1,0 +1,11 @@
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Atol.csproj.GenerateResource.Cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\bin\Release\Interop.FprnM1C.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\bin\Release\Newtonsoft.Json.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\bin\Release\Atol.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\bin\Release\Atol.pdb
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Atol.SettingsForm.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Atol.MainForm.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Atol.Properties.Resources.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Atol.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Atol.pdb

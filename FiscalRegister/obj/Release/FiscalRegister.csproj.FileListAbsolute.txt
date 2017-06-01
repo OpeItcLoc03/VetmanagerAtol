@@ -1,0 +1,48 @@
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.csproj.ResolveComReference.cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.SettingsForm.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.MainForm.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.Properties.Resources.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.csproj.GenerateResource.Cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\bin\Release\FiscalRegister.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\bin\Release\FiscalRegister.pdb
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\bin\Release\Newtonsoft.Json.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\bin\Release\Newtonsoft.Json.pdb
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\bin\Release\Newtonsoft.Json.xml
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\bin\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\FiscalRegister\FiscalRegister\obj\Release\FiscalRegister.pdb
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.csproj.ResolveComReference.cache
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.exe
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.pdb
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\FiscalRegister.exe
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\FiscalRegister.pdb
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Newtonsoft.Json.dll
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Newtonsoft.Json.pdb
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Newtonsoft.Json.xml
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.SettingsForm.resources
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.MainForm.resources
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.Properties.Resources.resources
+C:\Users\Pata\Downloads\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.csproj.GenerateResource.Cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.csproj.ResolveComReference.cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.pdb
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\FiscalRegister.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\FiscalRegister.pdb
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Newtonsoft.Json.pdb
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Newtonsoft.Json.xml
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\bin\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\ResolveAssemblyReference.cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.SettingsForm.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.MainForm.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.Properties.Resources.resources
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\FiscalRegister-master\FiscalRegister-master\FiscalRegister\obj\Release\FiscalRegister.csproj.GenerateResource.Cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\Interop.ArtSoftFiscalPrinterLib.dll
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\FiscalRegister.csproj.ResolveComReference.cache
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\FiscalRegister.exe
+C:\Users\Pata\Documents\Visual Studio 2008\Projects\Vetmanager\Atol-master\Atol-mster\FiscalRegister\obj\Release\FiscalRegister.pdb
