@@ -636,11 +636,11 @@ namespace Atol
 
             //Всегда до фискализации ККМ и до снятия первого суточного отчета с гашением после фискализации ККМ
             //номер последней закрытой смены равен 0.
-            this.printCaption("Смена № " + atolDriver.Session.ToString());
-            this.printCaption("ИНН пользователя: " + orgInn);
-            this.printCaption("Организация: " + orgName);
-            this.printCaption("Адрес расчета: " + orgAddress);
-            this.printCaption("Чек № " + atolDriver.CheckNumber.ToString());
+          //  this.printCaption("Смена № " + atolDriver.Session.ToString());
+          //  this.printCaption("ИНН пользователя: " + orgInn);
+          //  this.printCaption("Организация: " + orgName);
+          //  this.printCaption("Адрес расчета: " + orgAddress);
+         //   this.printCaption("Чек № " + atolDriver.CheckNumber.ToString());
             this.printCaption("Клиент ФИО:  " + clientFio);
 
             if (cardType != "")
