@@ -612,20 +612,30 @@ namespace Atol
                 double quantity = this.ParseEx(good["quantity"].ToString());
                 double price = this.ParseEx(good["price"].ToString());
                 double calc_disc_incr = this.ParseEx(good["calc_disc_incr"].ToString());
+                double discount = this.ParseEx(good["discount"].ToString());
+                double increase = this.ParseEx(good["increase"].ToString());
 
-                calc_disc_incr = Math.Round(calc_disc_incr, round);
-                quantity = Math.Round(quantity, round);
+                goodTitle += " (" + quantity + " x " + price + ")";
 
-                if (calc_disc_incr < 0)
+                if (calc_disc_incr != 0)
                 {
-                    price -= Math.Abs(calc_disc_incr) / quantity;
+                    if (increase > 0)
+                    {
+                        goodTitle += " надбавка:" + increase.ToString() + "%";
+                    }
+                    if (discount > 0)
+                    {
+                        goodTitle += " скидка:" + discount.ToString() + "%";
+                    }
+
+                    price = Math.Round(((quantity * price) + calc_disc_incr), round);
+                    quantity = 1;
                 }
                 else
                 {
-                    price += Math.Abs(calc_disc_incr) / quantity;
+                    price = Math.Round((quantity * price), round);
+                    quantity = 1;
                 }
-
-                price = Math.Round(price, round);
 
                 atolDriver.Name = goodTitle;
                 atolDriver.Price = price;
