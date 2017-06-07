@@ -352,6 +352,12 @@ namespace Atol
 
                 GC.Collect();
             }
+            
+            if (result.isError && "Нет бумаги" == result.lastErrorMessage)
+            {
+                System.Threading.Thread.Sleep(10 * 1000);
+                result = PrintDataByParams(registerDataId, registerModel, itemData, eventName);
+            }
 
             return result;
         }
