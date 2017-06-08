@@ -486,48 +486,80 @@ namespace Atol
         {
             /*
             {
-              "registerId": 5,
+              "registerId": 7,
               "invoicesOperations": [
                 {
-                  "payedCashSumm": 0,
-                  "payedCashlessSumm": "143.0000000000",
-                  "invoiceId": 656
+                  "payedCashSumm": 1664.8,
+                  "payedCashlessSumm": 0,
+                  "invoiceId": 731
                 }
               ],
               "taxSystem": 8,
               "taxTypeNumber": 4,
               "clientId": 15,
-              "sendByEmailOrPhone": "+380957939882",
-              "cardType": "other",
+              "sendByEmailOrPhone": "",
+              "cardType": "",
               "clinicId": 1,
               "clinicTitle": "Ваша клиника",
-              "org_name": "моя клиника",
-              "org_inn": "0123456789",
-              "org_address": "клиника гдето там",
-              "cassaId": 15,
-              "cassaUserId": 28,
-              "cassaUserFio": "Матвейчук Алена ",
-              "cassaTitle": "Касса хорошая",
-              "isNightInvoice": "0",
-              "isCallInvoice": "0",
-              "createDate": "28.05.2017 14:44",
+              "org_name": "aefwef",
+              "org_inn": "324234",
+              "org_address": "wewef",
+              "round": "1",
+              "cassaId": 4,
+              "cassaUserId": 20,
+              "cassaUserFio": "Игорь Горбунов Александрович",
+              "cassaTitle": "касса Вика",
+              "total_amount": 1664.8,
+              "isNightInvoice": 0,
+              "isCallInvoice": 0,
+              "createDate": "08.06.2017 13:25",
               "clientFio": "Горбунов Игорь ",
-              "invoiceId": 656,
-              "payedCashSumm": 0,
-              "payedCashlessSumm": "143.0000000000",
+              "invoiceId": 731,
+              "payedCashSumm": 1664.8,
+              "payedCashlessSumm": 0,
               "goods": [
                 {
-                  "good_title": "'Барс' капли ушные для кошек и собак 20мл",
-                  "quantity": "1.00",
-                  "price": "143.00",
+                  "good_title": "aaaa (амп)",
+                  "quantity": 2,
+                  "cost": 20,
+                  "price": 10,
                   "discount_cause": "Скидка: 0%, Карта: Скидка на услуги 30%, Тип карты: статичная",
-                  "discount": "0.00",
-                  "increase": "0.00",
-                  "percent": "0.00",
-                  "calc_disc_incr": 0
+                  "discount": 3,
+                  "increase": 7,
+                  "percent": 4
+                },
+                {
+                  "good_title": "Биовак DPAL2 (доза)",
+                  "quantity": 1,
+                  "cost": 240,
+                  "price": 240,
+                  "discount_cause": "Скидка: 0%, Карта: Скидка на услуги 30%, Тип карты: статичная",
+                  "discount": 3,
+                  "increase": 7,
+                  "percent": 4
+                },
+                {
+                  "good_title": ",Ковенан р-р, 20мл (флакон)",
+                  "quantity": 2,
+                  "cost": 12,
+                  "price": 6,
+                  "discount_cause": "Скидка: 0%, Карта: Скидка на услуги 30%, Тип карты: статичная",
+                  "discount": 3,
+                  "increase": 7,
+                  "percent": 4
+                },
+                {
+                  "good_title": "Товар с наценкой 2 (Вагон)",
+                  "quantity": 3,
+                  "cost": 1332,
+                  "price": 444,
+                  "discount_cause": "Скидка: 0%, Карта: Скидка на услуги 30%, Тип карты: статичная",
+                  "discount": 3,
+                  "increase": 7,
+                  "percent": 4
                 }
               ],
-              "description": "Счет №656"
+              "description": "Счет №731"
             }
             */
             StringBuilder sb = new StringBuilder();
@@ -551,6 +583,8 @@ namespace Atol
             double payedCashSumm = this.ParseEx(data["payedCashSumm"].ToString());
             double payedCashlessSumm = this.ParseEx(data["payedCashlessSumm"].ToString());
             string description = data["description"].ToString();
+            double totalAmount = this.ParseEx(data["total_amount"].ToString());
+            totalAmount = Math.Round(totalAmount, round);
 
             atolDriver.DeviceEnabled = true;
             atolDriver.Mode = 1;
@@ -594,56 +628,112 @@ namespace Atol
                 atolDriver.WriteAttribute();
             }
 
+            List<KeyValuePair<string, double>> goodResults = new List<KeyValuePair<string, double>>();
+            double sumCost = 0;
+
             foreach (JObject good in data["goods"])
             {
-                /*
-                {
-                  "good_title": "'Барс' капли ушные для кошек и собак 20мл",
-                  "quantity": "1.00",
-                  "price": "143.00",
-                  "discount_cause": "Скидка: 0%, Карта: Скидка на услуги 30%, Тип карты: статичная",
-                  "discount": "0.00",
-                  "increase": "0.00",
-                  "percent": "0.00",
-                  "calc_disc_incr": 0
-                }
-                */
                 string goodTitle = good["good_title"].ToString();
                 double quantity = this.ParseEx(good["quantity"].ToString());
                 double price = this.ParseEx(good["price"].ToString());
-                double calc_disc_incr = this.ParseEx(good["calc_disc_incr"].ToString());
+                double cost = this.ParseEx(good["cost"].ToString());
                 double discount = this.ParseEx(good["discount"].ToString());
                 double increase = this.ParseEx(good["increase"].ToString());
 
-                goodTitle += " (" + quantity + " x " + price + ")";
+                goodTitle += " (" + quantity + " x " + Math.Round(price, round) + ")";
 
-                if (calc_disc_incr != 0)
+                if (discount != 0 || increase != 0)
                 {
                     if (increase > 0)
                     {
                         goodTitle += " надбавка:" + increase.ToString() + "%";
+                        price = price + (price * increase / 100);
+                        cost = quantity * price;
                     }
+
                     if (discount > 0)
                     {
                         goodTitle += " скидка:" + discount.ToString() + "%";
+                        price = price - (price * discount / 100);
+                        cost = quantity * price;
                     }
-
-                    price = Math.Round(((quantity * price) + calc_disc_incr), round);
-                    quantity = 1;
                 }
-                else
+
+                cost = Math.Round(cost, round);
+                sumCost += cost;
+                goodResults.Add(new KeyValuePair<string, double>(goodTitle, cost));
+            }
+
+            double diff = 0;
+
+            if (sumCost != totalAmount) // если изза округления не совпала стоимость то пипец
+            {
+                           //1664.9  1664.8  
+                diff = Math.Round((totalAmount - sumCost), round);// 0.1
+            }
+
+            for (int i = 0; i < goodResults.Count; i++)
+            {
+                atolDriver.Name = goodResults[i].Key;
+                double price = goodResults[i].Value;
+
+                if (diff > 0)
                 {
-                    price = Math.Round((quantity * price), round);
-                    quantity = 1;
+                    price = Math.Round((price + diff), round);
+                    diff = 0;
+                }
+                else if (diff < 0 && (price > diff || i == goodResults.Count - 1))
+                {
+                     price = Math.Round((price + diff), round);
+                     diff = 0;
                 }
 
-                atolDriver.Name = goodTitle;
                 atolDriver.Price = price;
-                atolDriver.Quantity = quantity;
+                atolDriver.Quantity = 1;
                 atolDriver.Department = 0;
                 atolDriver.TaxTypeNumber = taxTypeNumber;
                 atolDriver.Registration();
             }
+
+            /*
+            foreach (JObject good in data["goods"])
+            {
+                string goodTitle = good["good_title"].ToString();
+                double quantity = this.ParseEx(good["quantity"].ToString());
+                double price = this.ParseEx(good["price"].ToString());
+                double cost = this.ParseEx(good["cost"].ToString());
+                double discount = this.ParseEx(good["discount"].ToString());
+                double increase = this.ParseEx(good["increase"].ToString());
+
+                goodTitle += " (" + quantity + " x " + Math.Round(price, round) + ")";
+
+                if (discount != 0 || increase != 0)
+                {
+                    if (increase > 0)
+                    {
+                        goodTitle += " надбавка:" + increase.ToString() + "%";
+                        price = price + (price * increase / 100);
+                        cost = quantity * price;
+                    }
+
+                    if (discount > 0)
+                    {
+                        goodTitle += " скидка:" + discount.ToString() + "%";
+                        price = price - (price * discount / 100);
+                        cost = quantity * price;
+                    }
+                }
+
+                cost = Math.Round(cost, round);
+                
+                atolDriver.Name = goodTitle;
+                atolDriver.Price = cost;
+                atolDriver.Quantity = 1;
+                atolDriver.Department = 0;
+                atolDriver.TaxTypeNumber = taxTypeNumber;
+                atolDriver.Registration();
+            }
+            */
 
             //Всегда до фискализации ККМ и до снятия первого суточного отчета с гашением после фискализации ККМ
             //номер последней закрытой смены равен 0.
