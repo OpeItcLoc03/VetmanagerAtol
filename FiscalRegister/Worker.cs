@@ -196,7 +196,7 @@ namespace Atol
                 return false;
             }
 
-            WebResult res = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), null, "get_status");
+            WebResult res = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), null, "get_status", 0);
 
             return !res.isError;
         }
@@ -251,7 +251,8 @@ namespace Atol
                                                     item["id"].ToString()
                                                     , int.Parse(this.settings.Device.Model)
                                                     , item["data"]
-                                                    , item["event_name"].ToString())
+                                                    , item["event_name"].ToString()
+                                                    , 0)
                                             );
                                         }
                                         else
@@ -287,8 +288,9 @@ namespace Atol
             }
         }
 
-        private WebResult PrintDataByParams(string registerDataId, int registerModel, JToken itemData, string eventName)
+        private WebResult PrintDataByParams(string registerDataId, int registerModel, JToken itemData, string eventName, int runCount)
         {
+            runCount++;
             AAtol printer = null;
             FprnM8Class atolDriver = this.getDevice();
             WebResult result = new WebResult();
@@ -352,11 +354,28 @@ namespace Atol
 
                 GC.Collect();
             }
-            
-            if (result.isError && "Нет бумаги" == result.lastErrorMessage)
+
+            if (result.isError)
             {
-                System.Threading.Thread.Sleep(10 * 1000);
-                result = PrintDataByParams(registerDataId, registerModel, itemData, eventName);
+                if (result.lastErrorMessage.IndexOf("Нет бумаги") != -1)
+                {
+                    System.Threading.Thread.Sleep(10 * 1000);
+                    result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, 0);
+                }
+                else if (runCount < 3 && result.lastErrorMessage.IndexOf("Открыт чек продажи/покупки - операция невозможна") != -1)
+                {
+                    result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, runCount);
+                }
+                else if (runCount < 3 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: В экземпляре объекта не задана ссылка на объект") != -1)
+                {
+                    result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, runCount);
+                }
+                else if (runCount < 1 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: Необходимо сделать Z-отчет, Смена превысила 24 часа") != -1)
+                {
+                    JObject data = JObject.Parse("{userFIO: \"кассир\"}");
+                    result = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), data, "smenaEnd", runCount);
+                    
+                }
             }
 
             return result;

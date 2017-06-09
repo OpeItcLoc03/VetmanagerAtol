@@ -12,6 +12,7 @@ using System.Collections.Specialized;
 using System.IO.Ports;
 using System.Threading;
 using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace Atol
 {

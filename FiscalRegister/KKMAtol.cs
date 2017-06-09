@@ -395,6 +395,7 @@ namespace Atol
               "cassaId": 4,
               "org_name": "моя клиника",
               "org_inn": "0123456789",
+              "cardType": "visa",
               "org_address": "клиника гдето там",
               "balanceIncomeOutcome": -80,
               "clientFio": "Горбунов Игорь ",
@@ -415,6 +416,7 @@ namespace Atol
             string clientFio = data["clientFio"].ToString();
             string cassaUserFio = data["cassaUserFio"].ToString();
             string cassaTitle = data["cassaTitle"].ToString();
+            string cardType = data["cardType"].ToString();
             int realMoney = int.Parse(data["realMoney"].ToString());
             string goodTitle = "";
 
@@ -468,9 +470,42 @@ namespace Atol
            // this.printCaption("Адрес расчета: " + orgAddress);
            // this.printCaption("Чек № " + atolDriver.CheckNumber.ToString());
 
-            atolDriver.TypeClose = (realMoney > 0) ? 0 : 1;
-            atolDriver.Summ = Math.Abs(balanceIncomeOutcome);
-            res = atolDriver.Payment();
+            if (cardType != "")
+            {
+                string tmpName = "Другая";
+
+                switch (cardType)
+                {
+                    case "visa":
+                        tmpName = "Виза";
+                        break;
+                    case "mastercard":
+                        tmpName = "Мастеркард";
+                        break;
+                    default:
+                        break;
+                }
+
+                this.printCaption("Оплачено картой:  " + tmpName);
+            }
+
+            // Оплата и закрытие чека
+            // TypeClose - Тип оплаты:
+            // 	0 - Наличными
+            // 	1 - Электронными средствами платежа
+
+            if (cardType != "")
+            {
+                atolDriver.TypeClose = 1;
+                atolDriver.Summ = Math.Abs(balanceIncomeOutcome);
+                res = atolDriver.Payment();
+            }
+            else
+            {
+                atolDriver.TypeClose = (realMoney == 1) ? 0 : 1;
+                atolDriver.Summ = Math.Abs(balanceIncomeOutcome);
+                res = atolDriver.Payment();
+            }
 
             if (atolDriver.CheckPaperPresent == false)
             {
@@ -694,46 +729,6 @@ namespace Atol
                 atolDriver.TaxTypeNumber = taxTypeNumber;
                 atolDriver.Registration();
             }
-
-            /*
-            foreach (JObject good in data["goods"])
-            {
-                string goodTitle = good["good_title"].ToString();
-                double quantity = this.ParseEx(good["quantity"].ToString());
-                double price = this.ParseEx(good["price"].ToString());
-                double cost = this.ParseEx(good["cost"].ToString());
-                double discount = this.ParseEx(good["discount"].ToString());
-                double increase = this.ParseEx(good["increase"].ToString());
-
-                goodTitle += " (" + quantity + " x " + Math.Round(price, round) + ")";
-
-                if (discount != 0 || increase != 0)
-                {
-                    if (increase > 0)
-                    {
-                        goodTitle += " надбавка:" + increase.ToString() + "%";
-                        price = price + (price * increase / 100);
-                        cost = quantity * price;
-                    }
-
-                    if (discount > 0)
-                    {
-                        goodTitle += " скидка:" + discount.ToString() + "%";
-                        price = price - (price * discount / 100);
-                        cost = quantity * price;
-                    }
-                }
-
-                cost = Math.Round(cost, round);
-                
-                atolDriver.Name = goodTitle;
-                atolDriver.Price = cost;
-                atolDriver.Quantity = 1;
-                atolDriver.Department = 0;
-                atolDriver.TaxTypeNumber = taxTypeNumber;
-                atolDriver.Registration();
-            }
-            */
 
             //Всегда до фискализации ККМ и до снятия первого суточного отчета с гашением после фискализации ККМ
             //номер последней закрытой смены равен 0.
