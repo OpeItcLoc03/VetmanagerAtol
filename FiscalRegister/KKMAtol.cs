@@ -626,9 +626,12 @@ namespace Atol
   //atolDriver.TestMode = true;
             if (!this.SetModeAndStartDocument()) { return returnError(); }
 
-            atolDriver.AttrNumber = 1021;
-            atolDriver.AttrValue = "Кассир: " + cassaUserFio;
-            atolDriver.WriteAttribute();
+            if (cassaUserFio != "") 
+            {
+                atolDriver.AttrNumber = 1021;
+                atolDriver.AttrValue = "Кассир: " + cassaUserFio;
+                atolDriver.WriteAttribute();
+            }
 
            // string textForPrint = "";
             // Наименование пользователя

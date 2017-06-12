@@ -342,6 +342,8 @@ namespace Atol
                 result.data = registerDataId;
                 result.isError = true;
                 result.lastErrorMessage = "Ошибка обработки данных: " + err.Message;
+
+                AddToLog(result.lastErrorMessage + " stack: " + err.StackTrace.ToString());
             }
             finally
             {
@@ -357,25 +359,37 @@ namespace Atol
 
             if (result.isError)
             {
+                
+
                 if (result.lastErrorMessage.IndexOf("Нет бумаги") != -1)
                 {
                     System.Threading.Thread.Sleep(10 * 1000);
                     result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, 0);
-                }
-                else if (runCount < 3 && result.lastErrorMessage.IndexOf("Открыт чек продажи/покупки - операция невозможна") != -1)
+                } 
+                else 
                 {
-                    result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, runCount);
-                }
-                else if (runCount < 3 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: В экземпляре объекта не задана ссылка на объект") != -1)
-                {
-                    result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, runCount);
-                }
-                else if (runCount < 1 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: Необходимо сделать Z-отчет, Смена превысила 24 часа") != -1)
-                {
-                    JObject data = JObject.Parse("{userFIO: \"кассир\"}");
-                    result = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), data, "smenaEnd", runCount);
-                    
-                }
+                    WebResult subRes = new WebResult();
+                    subRes.data = null;
+
+                    if (runCount < 3 && result.lastErrorMessage.IndexOf("Открыт чек продажи/покупки - операция невозможна") != -1)
+                    {
+                        subRes = PrintDataByParams(registerDataId, registerModel, itemData, eventName, runCount);
+                    }
+                    else if (runCount < 3 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: В экземпляре объекта не задана ссылка на объект") != -1)
+                    {
+                        subRes = PrintDataByParams(registerDataId, registerModel, itemData, eventName, runCount);
+                    }
+                    else if (runCount > -1 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: Необходимо сделать Z-отчет") != -1)
+                    {
+                        JObject subData = JObject.Parse("{userFIO: \"кассир\"}");
+                        subRes = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), subData, "smenaEnd", -2);
+                    }
+
+                    if (subRes.lastErrorMessage != null && subRes.data != null && subRes.isError == false) 
+                    {
+                        result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, 0);
+                    }
+                }                
             }
 
             return result;
