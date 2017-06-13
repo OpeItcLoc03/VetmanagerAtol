@@ -246,14 +246,59 @@ namespace Atol
                                     {
                                         if (settings.ApiKey == item["api_key"].ToString())
                                         {
-                                            results.Add(
-                                                this.PrintDataByParams(
+                                            WebResult result = new WebResult();
+                                            result.data = null;
+                                            int runCount = 0;
+
+                                            while (true)
+                                            {
+                                                result = this.PrintDataByParams(
                                                     item["id"].ToString()
                                                     , int.Parse(this.settings.Device.Model)
                                                     , item["data"]
                                                     , item["event_name"].ToString()
-                                                    , 0)
-                                            );
+                                                    , runCount);
+
+                                                runCount++; 
+
+                                                if (!result.isError) 
+                                                {
+                                                    break;
+                                                } 
+                                                else 
+                                                {
+                                                    if (result.lastErrorMessage.IndexOf("Нет бумаги") != -1)
+                                                    {
+                                                        System.Threading.Thread.Sleep(10 * 1000);
+                                                        continue;
+                                                    }
+                                                    else
+                                                    {
+                                                        if (runCount < 3 && result.lastErrorMessage.IndexOf("Открыт чек продажи/покупки - операция невозможна") != -1)
+                                                        {
+                                                            continue;
+                                                        }
+                                                        else if (runCount < 3 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: В экземпляре объекта не задана ссылка на объект") != -1)
+                                                        {
+                                                            continue;
+                                                        }
+                                                        else if (runCount > -1 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: Необходимо сделать Z-отчет") != -1)
+                                                        {
+                                                            JObject subData = JObject.Parse("{userFIO: \"кассир\"}");
+                                                            WebResult subRes = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), subData, "smenaEnd", -2);
+
+                                                            if (subRes.lastErrorMessage != null && subRes.data != null && subRes.data == "" && subRes.isError == false)
+                                                            {
+                                                                continue;
+                                                            }
+                                                        }
+                                                    }
+
+                                                    break;
+                                                }
+                                            }
+
+                                            results.Add(result);
                                         }
                                         else
                                         {
@@ -356,11 +401,9 @@ namespace Atol
 
                 GC.Collect();
             }
-
+            /*
             if (result.isError)
             {
-                
-
                 if (result.lastErrorMessage.IndexOf("Нет бумаги") != -1)
                 {
                     System.Threading.Thread.Sleep(10 * 1000);
@@ -385,13 +428,13 @@ namespace Atol
                         subRes = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), subData, "smenaEnd", -2);
                     }
 
-                    if (subRes.lastErrorMessage != null && subRes.data != null && subRes.isError == false) 
+                    if (subRes.lastErrorMessage != null && subRes.data != null && subRes.data == "" && subRes.isError == false) 
                     {
                         result = PrintDataByParams(registerDataId, registerModel, itemData, eventName, 0);
                     }
                 }                
             }
-
+            */
             return result;
         }
 
