@@ -20,3 +20,7 @@ D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Debug\Atol.Properties.Resource
 D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Debug\Atol.csproj.GenerateResource.Cache
 D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Debug\Atol.exe
 D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Debug\Atol.pdb
+D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Debug\vmUpdator.exe
+D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Debug\Ionic.Zip.dll
+D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Debug\VersionController.dll
+D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Debug\VersionController.pdb

@@ -37,6 +37,8 @@ namespace Atol
         public MainForm()
         {
             InitializeComponent();
+            this.Text = "VetManager и АТОЛ " + Version.version;
+
             this.iconClass.initIcon(this);
 
             Label.CheckForIllegalCrossThreadCalls = false;

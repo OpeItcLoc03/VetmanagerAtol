@@ -163,15 +163,51 @@ namespace Atol
 
             if (this.IsDeviceWorking())
             {
-                    if (this.CheckVetmanagerConnection())
+                if (this.CheckVetmanagerConnection())
+                {
+                    AddToLog("Проверка обновления ...");
+
+                    VersionController.VersionChecker versionChecker = new VersionController.VersionChecker();
+                    VersionController.Response verResponse = versionChecker.CheckVersion(this.settings.FullUrl, Version.version);
+
+                    AddToLog(verResponse.message);
+
+                    if (!verResponse.isError)
                     {
-                        this.DoJob();
+                        if (verResponse.isUpToDate)
+                        {
+                            this.DoJob();
+                        }
+                        else if (verResponse.isFileLoadeed)
+                        {
+                            if (versionChecker.UnzipProgram())
+                            {
+                                AddToLog("Обновление распаковано!");
+                                // file unzipped
+                                AddToLog("Попытка начать обновление");
+                                if (versionChecker.StartUpdator())
+                                {
+                                    AddToLog("Обновление началось, текущая (старая) версия: " + Version.version);
+                                    AddToLog("Перезапуск программы");
+                                    this.mainForm.Close();
+                                }
+                                else
+                                {
+                                    AddToLog("Ошибка обновления!!!");
+                                }
+                            } else {
+                                // error unzipping
+                                AddToLog("Ошибка распаковки обновления!!!");
+                            }
+                            
+                        }
                     }
-                    else
-                    {
-                        AddToLog("Нет соединения с ветменеджер");
-                        isError = true;
-                    }
+                }
+                else
+                {
+                    AddToLog("Нет соединения с ветменеджер");
+                    isError = true;
+                }
             }
             else
             {
