@@ -35,9 +35,28 @@ namespace Atol
 
             wp = null;
 
-            if (!res.isError && res.data == "connection_succesfull")
+            if (!res.isError && res.data != "")
             {
-                AddToLog("Соединено успешно");
+                if (res.data.IndexOf("connection_succesfull") != -1)
+                {
+                    AddToLog("Соединено успешно");
+
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+                }
+                else if (res.data == "need_update_local")
+                {
+                    this.TryLocalUpdate();
+                }
+                else if (res.data == "need_check_version_remote")
+                {
+                    this.TryRemoteCheckUpdate();
+                }
+                
                 return true;
             }
 
@@ -75,13 +94,31 @@ namespace Atol
 
             wp = null;
 
-            if (!res.isError && res.data.Length > 0)
+            if (!res.isError)
             {
-                AddToLog("Получен ответ от сервера, размер данных: " + res.data.Length + " байт");
-            }
-            else if (!res.isError && res.data.Length == 0)
-            {
-                AddToLog("Нет данных");
+                if (res.data.IndexOf("no_data:") != -1)
+                {
+                    AddToLog("Нет данных");
+
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+                }
+                else if (res.data.IndexOf("no_data:") == -1)
+                {
+                    AddToLog("Получен ответ от сервера, размер данных: " + res.data.Length + " байт");
+                }
+                else if (res.data == "need_update_local")
+                {
+                    this.TryLocalUpdate();
+                }
+                else if (res.data == "need_check_version_remote")
+                {
+                    this.TryRemoteCheckUpdate();
+                }
             }
             else
             {
@@ -89,6 +126,88 @@ namespace Atol
             }
 
             return res;
+        }
+
+        private void TryLocalUpdate()
+        {
+            VersionController.Response resp = VersionController.VersionChecker.UpdateLocal(this.settings.FullUrl, this.settings.ApiKey);
+
+            if (!resp.isError && resp.isFileLoadeed)
+            {
+                AddToLog("Новая версия загружена с вашего домена");
+
+                if (VersionController.VersionChecker.UnzipProgram())
+                {
+                    AddToLog("Обновление распаковано!");
+                    // file unzipped
+                    AddToLog("Попытка начать обновление, текущая (старая) версия: " + Version.version);
+                    if (VersionController.VersionChecker.StartUpdator())
+                    {
+                        this.mainForm.Close();
+                    }
+                    else
+                    {
+                        AddToLog("Ошибка обновления!!!");
+                    }
+                }
+                else
+                {
+                    // error unzipping
+                    AddToLog("Ошибка распаковки обновления!!!");
+                }
+            }
+            else
+            {
+                AddToLog("Ошибка загрузки файла: " + resp.message);
+            }
+        }
+
+        private void TryRemoteCheckUpdate()
+        {
+            AddToLog("Проверка новой версии на удаленном сервере");
+
+            this.mainForm.remoteVersionChecker.Stop();
+
+            VersionController.Response resp = VersionController.VersionChecker.UpdateRemote(Version.vmVersion, Version.version);
+
+            this.mainForm.remoteVersionChecker.Start();
+
+            if (!resp.isError)
+            {
+                if (resp.isFileLoadeed)
+                {
+                    AddToLog("Новая версия загружена с удаленного домена");
+
+                    if (VersionController.VersionChecker.UnzipProgram())
+                    {
+                        AddToLog("Обновление распаковано!");
+                        // file unzipped
+                        AddToLog("Попытка начать обновление, текущая (старая) версия: " + Version.version);
+                        
+                        if (VersionController.VersionChecker.StartUpdator())
+                        {
+                            this.mainForm.Close();
+                        }
+                        else
+                        {
+                            AddToLog("Ошибка обновления!!!");
+                        }
+                    }
+                    else
+                    {
+                        // error unzipping
+                        AddToLog("Ошибка распаковки обновления!!!");
+                    }
+                }
+                else if (resp.message.IndexOf('.') != -1 && resp.message == Version.version)
+                {
+                    AddToLog("Клиент не нуждается в обновлении");
+                }
+            }
+            else
+            {
+                AddToLog("Ошибка проверки версии: " + resp.message);
+            }
         }
 
         private FprnM8Class getDevice()
@@ -165,43 +284,7 @@ namespace Atol
             {
                 if (this.CheckVetmanagerConnection())
                 {
-                    AddToLog("Проверка обновления ...");
-
-                    VersionController.VersionChecker versionChecker = new VersionController.VersionChecker();
-                    VersionController.Response verResponse = versionChecker.CheckVersion(this.settings.FullUrl, Version.version);
-
-                    AddToLog(verResponse.message);
-
-                    if (!verResponse.isError)
-                    {
-                        if (verResponse.isUpToDate)
-                        {
-                            this.DoJob();
-                        }
-                        else if (verResponse.isFileLoadeed)
-                        {
-                            if (versionChecker.UnzipProgram())
-                            {
-                                AddToLog("Обновление распаковано!");
-                                // file unzipped
-                                AddToLog("Попытка начать обновление");
-                                if (versionChecker.StartUpdator())
-                                {
-                                    AddToLog("Обновление началось, текущая (старая) версия: " + Version.version);
-                                    AddToLog("Перезапуск программы");
-                                    this.mainForm.Close();
-                                }
-                                else
-                                {
-                                    AddToLog("Ошибка обновления!!!");
-                                }
-                            } else {
-                                // error unzipping
-                                AddToLog("Ошибка распаковки обновления!!!");
-                            }
-                            
-                        }
-                    }
+                    this.DoJob();
                 }
                 else
                 {

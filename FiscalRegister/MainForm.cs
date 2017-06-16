@@ -25,6 +25,7 @@ namespace Atol
         public bool LastError = false;
         public System.Windows.Forms.Timer memoryTimer = new System.Windows.Forms.Timer();
         public System.Windows.Forms.Timer garbageTimer = new System.Windows.Forms.Timer();
+        public System.Windows.Forms.Timer remoteVersionChecker = new System.Windows.Forms.Timer();
         public Worker worker = new Worker();
         Thread workerThread = null;
         private MyNotifyIcon iconClass = new MyNotifyIcon();
@@ -38,6 +39,10 @@ namespace Atol
         {
             InitializeComponent();
             this.Text = "VetManager и АТОЛ " + Version.version;
+
+            Version.ReadVmVersionFromFile();
+
+            AddToLog("Текущая версия программы: " + Version.version);
 
             this.iconClass.initIcon(this);
 
@@ -66,12 +71,72 @@ namespace Atol
             garbageTimer.Tick += new EventHandler(garbageTimer_Tick);
             garbageTimer.Start();
 
+            remoteVersionChecker.Interval = 1000 * 60 * 10; // 10 mins
+            //remoteVersionChecker.Interval = 1000 * 10; // 10 mins // TODO remove
+            remoteVersionChecker.Tick += new EventHandler(remoteVersionChecker_Tick);
+            remoteVersionChecker.Start();
+
             if (this.settings.StartAfterRun)
             {
                 StartProgram();
                 this.iconClass.disableStart();
                 this.iconClass.showHideForm();
             }
+        }
+
+        void remoteVersionChecker_Tick(object sender, EventArgs e)
+        {
+            remoteVersionChecker.Stop();
+
+            AddToLog("Остановка рабочего потока для проверки версии");
+
+            StopProgram();
+            this.iconClass.disableStop();
+
+            AddToLog("Проверка новой версии на удаленном сервере");
+            
+            VersionController.Response resp = VersionController.VersionChecker.UpdateRemote(Version.vmVersion, Version.version);
+            
+            remoteVersionChecker.Start();
+
+            if (!resp.isError)
+            {
+                if (resp.isFileLoadeed)
+                {
+                    AddToLog("Новая версия загружена с удаленного домена");
+
+                    if (VersionController.VersionChecker.UnzipProgram())
+                    {
+                        AddToLog("Обновление распаковано!");
+                        // file unzipped
+                        AddToLog("Попытка начать обновление, текущая (старая) версия: " + Version.version);
+                        if (VersionController.VersionChecker.StartUpdator())
+                        {
+                            this.Close();
+                        }
+                        else
+                        {
+                            AddToLog("Ошибка обновления!!!");
+                        }
+                    }
+                    else
+                    {
+                        // error unzipping
+                        AddToLog("Ошибка распаковки обновления!!!");
+                    }
+                }
+                else if (resp.message.IndexOf('.') != -1 && resp.message == Version.version)
+                {
+                    AddToLog("Клиент не нуждается в обновлении");
+                }
+            }
+            else
+            {
+                AddToLog("Ошибка проверки версии: " + resp.message);
+            }
+
+            StartProgram();
+            this.iconClass.disableStart();
         }
 
         void garbageTimer_Tick(object sender, EventArgs e)

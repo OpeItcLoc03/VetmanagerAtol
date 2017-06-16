@@ -31,21 +31,20 @@ namespace Atol
 
             using (WebClient wb = new WebClient())
             {
-                //WebProxy prox = new WebProxy("202.52.236.122", 8080);
-               // WebProxy prox = new WebProxy("37.59.80.69", 8080);
-                
-                //prox.Credentials = CredentialCache.DefaultCredentials;
-               // wb.Proxy = prox;
                 wb.Headers[HttpRequestHeader.UserAgent] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
  
-//                wb.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
-            
                 result.isError = false;
                 result.lastErrorMessage = "";
                 var data = new NameValueCollection();
                 data["api"] = api.Trim();
                 data["action"] = action;
                 data["r"] = (new Random().Next(1000000, 9999999)).ToString();
+
+                if ("set_response_data" != action)
+                {
+                    data["vmVersionFromClient"] = Version.vmVersion;
+                    data["client_version"] = Version.version;
+                }
                                 
                 foreach (KeyValuePair<string, string> item in subdata)
                 {
@@ -77,11 +76,6 @@ namespace Atol
         {
             return this.getDataByAction("check_connection", null);
         }
-
-        /*internal WebResult hasUnsendedData()
-        {
-            return this.getDataByAction("has_unsended_data", null);
-        }*/
 
         internal WebResult getUnsendedData()
         {
