@@ -5,7 +5,6 @@ using System.Text;
 using System.Net;
 using System.Collections.Specialized;
 using System.IO;
-using Ionic.Zip;
 using System.Diagnostics;
 
 namespace VersionController
@@ -15,13 +14,10 @@ namespace VersionController
         public const string ACTION_CHECK_VERSION = "checkVersion";
         public const string ACTION_GET_CLIENT = "getClient";
         public const string ONLINE_UPDATE_URL = "https://login.vetmanager.ru/OnlineCassa.php";
-        
-        public const string FILENAME = "new version.zip";
-        public const string PARAM1 = "from_atol";
-        public const string CASSA_TYPE = "atol";
-        public const string UPDATEFILE = "vmUpdator.exe"; // do not change !!!
-        public const string RELEASEDIR = "_release_temp"; // do not change !!!
 
+        public const string UPDATOR_FILE = "vmUpdator2.exe";
+        public const string CUR_EXE_FILE = "Atol.exe";
+       
         private static Response CheckVersion(string vmVersionFromClient)
         {
             Response resp = new Response();
@@ -63,186 +59,18 @@ namespace VersionController
             return resp;
         }
 
-        private static Response DownloadRemoteClient(string clientVersion)
+        public static bool IsNeedUpdateLocal(string url, string api)
         {
-            Response resp = new Response();
+            url += "?api=" + api + "&action=download_atol_client";
+            Process pp = new Process();
+            pp.StartInfo.FileName = UPDATOR_FILE;
+            pp.StartInfo.Arguments = CUR_EXE_FILE + " " + url;
+            pp.Start();
 
-            using (WebClient wb = new WebClient())
-            {
-                var values = new NameValueCollection();
-                values["clientVersion"] = clientVersion;
-                values["action"] = ACTION_GET_CLIENT;
-                values["cassaType"] = CASSA_TYPE;
-                values["r"] = (new Random().Next(1000000, 9999999)).ToString();          
-
-                try
-                {
-                    byte[] response = wb.UploadValues(ONLINE_UPDATE_URL, "POST", values);
-                    string data = Encoding.UTF8.GetString(response);
-
-                    if (data != "")
-                    {
-                        if ("file_not_found" == data)
-                        {
-                            resp.isError = true;
-                            resp.message = "Файл не найден";
-                        }
-                        else if ("wrong_params" == data)
-                        {
-                            resp.isError = true;
-                            resp.message = "Не верные параметры";
-                        }
-                        else
-                        {
-                            try
-                            {
-                                if (File.Exists(FILENAME))
-                                {
-                                    File.Delete(FILENAME);
-                                }
-
-                                File.WriteAllBytes(FILENAME, response);
-                                resp.isFileLoadeed = true;
-                                resp.message = "Файл загружен";
-                            }
-                            catch (Exception err)
-                            {
-                                resp.isError = true;
-                                resp.message = "Ошибка загрузки файла: " + err.Message;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        resp.isError = true;
-                        resp.message = "Нет ответа";
-                    }
-                }
-                catch (Exception e)
-                {
-                    resp.isError = true;
-                    resp.message = "Ошибка загрузки файла: " + e.Message;
-                }
-            }
-
-            return resp;
+            return true;
         }
 
-        public static bool UnzipProgram()
-        {
-            if (!File.Exists(FILENAME))
-            {
-                return false;
-            }
-
-            if (!Directory.Exists(RELEASEDIR))
-            {
-                Directory.CreateDirectory(RELEASEDIR);
-            }
-
-            /////
-
-            DirectoryInfo di = new DirectoryInfo(RELEASEDIR);
-
-            foreach (FileInfo file in di.GetFiles())
-            {
-                file.Delete();
-            }
-
-            foreach (DirectoryInfo dir in di.GetDirectories())
-            {
-                dir.Delete(true);
-            }
-
-            ////
-            try
-            {
-                using (var zip = ZipFile.Read(FILENAME))
-                {
-                    zip.ExtractAll(RELEASEDIR, ExtractExistingFileAction.OverwriteSilently);
-                }
-            }
-            catch (Exception err)
-            {
-                return false;
-            }
-
-            int fileCount = new DirectoryInfo(RELEASEDIR).GetFiles().Length;
-
-            if (fileCount > 5 && File.Exists(FILENAME))
-            {
-                try
-                {
-                  //  File.Delete(FILENAME);
-                }
-                catch { }
-            }
-
-            return fileCount > 5;
-        }
-
-        public static bool StartUpdator()
-        {
-            if (File.Exists(RELEASEDIR + "/" + UPDATEFILE))
-            {
-                Directory.SetCurrentDirectory(RELEASEDIR);
-
-                Process pp = new Process();
-                pp.StartInfo.FileName = UPDATEFILE;
-                pp.StartInfo.Arguments = PARAM1;
-                pp.Start();
-                return true;
-            }
-
-            return false;
-        }
-
-        public static Response UpdateLocal(string url, string api)
-        {
-            Response resp = new Response();
-
-            using (WebClient wb = new WebClient())
-            {
-                var values = new NameValueCollection();
-                values["action"] = "download_atol_client";
-                values["api"] = api;
-                values["r"] = (new Random().Next(1000000, 9999999)).ToString();        
-
-                try
-                {
-                    byte[] response = wb.UploadValues(url, "POST", values);
-                    string data = Encoding.UTF8.GetString(response);
-
-                    if (data != "")
-                    {
-                        try
-                        {
-                            File.WriteAllBytes(FILENAME, response);
-                            resp.isFileLoadeed = true;
-                            resp.message = "Файл загружен";
-                        }
-                        catch (Exception err)
-                        {
-                            resp.isError = true;
-                            resp.message = "Ошибка загрузки файла: " + err.Message;
-                        }
-                    }
-                    else
-                    {
-                        resp.isError = true;
-                    }
-                }
-                catch (Exception e)
-                {
-                    resp.isError = true;
-                    resp.message = "Ошибка загрузки файла: " + e.Message;
-                }
-            }
-
-            return resp;
-        }
-
-        public static Response UpdateRemote(string vmVersionFromClient, string clientVersion)
+        public static bool IsNeedUpdateRemote(string vmVersionFromClient, string clientVersion)
         {
             Response resp = CheckVersion(vmVersionFromClient);
 
@@ -250,10 +78,16 @@ namespace VersionController
             {
                 string remoteVersion = resp.message;
 
-                if (remoteVersion != clientVersion)
+                if (isLocalVersionNewer(remoteVersion, clientVersion))
                 {
-                    resp = null;
-                    return DownloadRemoteClient(remoteVersion);
+                    string url = "https://login.vetmanager.ru/OnlineCassa.php?clientVersion=" + remoteVersion + "&action=getClient&cassaType=atol";
+                    
+                    Process pp = new Process();
+                    pp.StartInfo.FileName = UPDATOR_FILE;
+                    pp.StartInfo.Arguments = CUR_EXE_FILE + " " + url;
+                    pp.Start();
+
+                    return true;
                 }
             }
 
@@ -261,7 +95,47 @@ namespace VersionController
             // https://login.vetmanager.ru/OnlineCassa.php?clientVersion=1.0.9&action=getClient&cassaType=atol
 
 
-            return resp;            
+            return false;            
+        }
+
+        private static string[] parseVersion(string ver) {
+            string[] subres = ver.Split('.');
+
+            string[] res = new string[] {"0", "0", "0"};
+
+            for (int i = 0; i < subres.Length; i++)
+			{
+                res[i] = subres[i].ToString();
+			}
+
+            return res;
+        }
+
+        private static bool isLocalVersionNewer(string lVersion, string cVersion) 
+        {
+            string[] localVersion = parseVersion(lVersion);
+            string[] clientVersion = parseVersion(cVersion);
+
+            bool isNewer = false;
+
+            if (int.Parse(localVersion[0]) > int.Parse(clientVersion[0])) {
+                isNewer = true;
+            }
+            else if (int.Parse(localVersion[0]) == int.Parse(clientVersion[0]))
+            {
+                if (int.Parse(localVersion[1]) > int.Parse(clientVersion[1]))
+                {
+                    isNewer = true;
+                }
+                else if (int.Parse(localVersion[1]) == int.Parse(clientVersion[1]))
+                {
+                    if (int.Parse(localVersion[2]) > int.Parse(clientVersion[2]))
+                    {
+                        isNewer = true;
+                    }
+                }
+            }
+            return isNewer;
         }
     }
 }

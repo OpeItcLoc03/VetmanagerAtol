@@ -19,7 +19,7 @@ namespace Atol
         private int longPoolingSleepInterval = 1000 * 5;        
         public bool isConnectedToRegister = false;
         public bool isNeedIterrupt = false;
-        private string[] errorResponses = { "no_data", "wrong_clinic", "wrong_api", "wrong_params", "no_params" };
+        private string[] errorResponses = { "no_data", "wrong_clinic", "wrong_api", "wrong_params", "no_params", "need_update_local", "need_check_version_remote" };
                             
         public Worker()
         {
@@ -48,12 +48,30 @@ namespace Atol
                         Version.vmVersion = args[1].ToString();
                     }
                 }
-                else if (res.data == "need_update_local")
+                else if (res.data.IndexOf("need_update_local:") != -1)
                 {
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+
+                    res.data = "need_update_local";
+
                     this.TryLocalUpdate();
                 }
-                else if (res.data == "need_check_version_remote")
+                else if (res.data.IndexOf("need_check_version_remote:") != -1)
                 {
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+
+                    res.data = "need_check_version_remote";
+
                     this.TryRemoteCheckUpdate();
                 }
                 
@@ -106,18 +124,38 @@ namespace Atol
                     {
                         Version.vmVersion = args[1].ToString();
                     }
+
+                    res.data = "no_data";
                 }
-                else if (res.data.IndexOf("no_data:") == -1)
+                else if (res.data.IndexOf("need_update_local:") != -1)
                 {
-                    AddToLog("Получен ответ от сервера, размер данных: " + res.data.Length + " байт");
-                }
-                else if (res.data == "need_update_local")
-                {
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+
+                    res.data = "need_update_local";
+
                     this.TryLocalUpdate();
                 }
-                else if (res.data == "need_check_version_remote")
+                else if (res.data.IndexOf("need_check_version_remote:") != -1)
                 {
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+
+                    res.data = "need_check_version_remote";
+
                     this.TryRemoteCheckUpdate();
+                }
+                else 
+                {
+                    AddToLog("Получен ответ от сервера, размер данных: " + res.data.Length + " байт");
                 }
             }
             else
@@ -130,36 +168,20 @@ namespace Atol
 
         private void TryLocalUpdate()
         {
-            VersionController.Response resp = VersionController.VersionChecker.UpdateLocal(this.settings.FullUrl, this.settings.ApiKey);
+            AddToLog("Проверка новой версии на локальном сервере");
 
-            if (!resp.isError && resp.isFileLoadeed)
-            {
-                AddToLog("Новая версия загружена с вашего домена");
+            this.mainForm.remoteVersionChecker.Stop();
 
-                if (VersionController.VersionChecker.UnzipProgram())
-                {
-                    AddToLog("Обновление распаковано!");
-                    // file unzipped
-                    AddToLog("Попытка начать обновление, текущая (старая) версия: " + Version.version);
-                    if (VersionController.VersionChecker.StartUpdator())
-                    {
-                        this.mainForm.Close();
-                    }
-                    else
-                    {
-                        AddToLog("Ошибка обновления!!!");
-                    }
-                }
-                else
-                {
-                    // error unzipping
-                    AddToLog("Ошибка распаковки обновления!!!");
-                }
-            }
-            else
+            bool resp = VersionController.VersionChecker.IsNeedUpdateLocal(this.settings.FullUrl, this.settings.ApiKey);
+
+            if (resp)
             {
-                AddToLog("Ошибка загрузки файла: " + resp.message);
+                AddToLog("Закрытие програмы для обновления");
+                System.Threading.Thread.Sleep(2000);
+                this.mainForm.Close();
             }
+
+            this.mainForm.remoteVersionChecker.Start();
         }
 
         private void TryRemoteCheckUpdate()
@@ -168,46 +190,17 @@ namespace Atol
 
             this.mainForm.remoteVersionChecker.Stop();
 
-            VersionController.Response resp = VersionController.VersionChecker.UpdateRemote(Version.vmVersion, Version.version);
+            bool resp = VersionController.VersionChecker.IsNeedUpdateRemote(Version.vmVersion, Version.version);
+
+            if (resp)
+            {
+                AddToLog("Закрытие програмы для обновления");
+                System.Threading.Thread.Sleep(2000);
+                this.mainForm.Close();
+                return;
+            }
 
             this.mainForm.remoteVersionChecker.Start();
-
-            if (!resp.isError)
-            {
-                if (resp.isFileLoadeed)
-                {
-                    AddToLog("Новая версия загружена с удаленного домена");
-
-                    if (VersionController.VersionChecker.UnzipProgram())
-                    {
-                        AddToLog("Обновление распаковано!");
-                        // file unzipped
-                        AddToLog("Попытка начать обновление, текущая (старая) версия: " + Version.version);
-                        
-                        if (VersionController.VersionChecker.StartUpdator())
-                        {
-                            this.mainForm.Close();
-                        }
-                        else
-                        {
-                            AddToLog("Ошибка обновления!!!");
-                        }
-                    }
-                    else
-                    {
-                        // error unzipping
-                        AddToLog("Ошибка распаковки обновления!!!");
-                    }
-                }
-                else if (resp.message.IndexOf('.') != -1 && resp.message == Version.version)
-                {
-                    AddToLog("Клиент не нуждается в обновлении");
-                }
-            }
-            else
-            {
-                AddToLog("Ошибка проверки версии: " + resp.message);
-            }
         }
 
         private FprnM8Class getDevice()

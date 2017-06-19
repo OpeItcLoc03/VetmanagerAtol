@@ -21,6 +21,6 @@ D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Release\Atol.MainForm.resource
 D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Release\Atol.Properties.Resources.resources
 D:\Projects\AtolFiscalRegister\FiscalRegister\obj\Release\Atol.csproj.GenerateResource.Cache
 D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\Ionic.Zip.dll
-D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\vmUpdator.exe
 D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\VersionController.dll
 D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\VersionController.pdb
+D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\vmUpdator2.exe

@@ -104,10 +104,20 @@ namespace Atol
             WebResult res = wp.checkConnection();
             EnableFields();
 
-            if (!res.isError && res.data == "connection_succesfull")
+            if (!res.isError && res.data != "")
             {
-                mainForm.AddToLog("Соединено успешно");
-                MessageBox.Show("Соединено успешно", "Системное сообщение");
+                if (res.data.IndexOf("connection_succesfull") != -1)
+                {
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+
+                    mainForm.AddToLog("Соединено успешно");
+                    MessageBox.Show("Соединено успешно", "Системное сообщение");
+                }
             }
             else
             {

@@ -1,4 +1,3 @@
-D:\Projects\AtolFiscalRegister\VersionController\bin\Release\Ionic.Zip.dll
 D:\Projects\AtolFiscalRegister\VersionController\bin\Release\VersionController.dll
 D:\Projects\AtolFiscalRegister\VersionController\bin\Release\VersionController.pdb
 D:\Projects\AtolFiscalRegister\VersionController\obj\Release\ResolveAssemblyReference.cache

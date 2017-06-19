@@ -14,7 +14,7 @@ namespace Atol
 
         public static string version
         {
-            get { return "1.0.11"; }
+            get { return "1.0.12"; }
         }
 
         public static string vmVersion

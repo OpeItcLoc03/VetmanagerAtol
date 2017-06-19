@@ -29,6 +29,7 @@ namespace Atol
         public Worker worker = new Worker();
         Thread workerThread = null;
         private MyNotifyIcon iconClass = new MyNotifyIcon();
+        public bool isRunning = false;
 
         public IContainer getComponents()
         {
@@ -72,7 +73,7 @@ namespace Atol
             garbageTimer.Start();
 
             remoteVersionChecker.Interval = 1000 * 60 * 10; // 10 mins
-            //remoteVersionChecker.Interval = 1000 * 10; // 10 mins // TODO remove
+            //remoteVersionChecker.Interval = 1000  * 5; // 10 mins
             remoteVersionChecker.Tick += new EventHandler(remoteVersionChecker_Tick);
             remoteVersionChecker.Start();
 
@@ -83,62 +84,41 @@ namespace Atol
                 this.iconClass.showHideForm();
             }
         }
-
+        
         void remoteVersionChecker_Tick(object sender, EventArgs e)
         {
             remoteVersionChecker.Stop();
 
-            AddToLog("Остановка рабочего потока для проверки версии");
+            bool wasRunning = isRunning;
 
-            StopProgram();
-            this.iconClass.disableStop();
+            if (isRunning)
+            {
+                AddToLog("Остановка рабочего потока для проверки версии");
+
+                StopProgram();
+                this.iconClass.disableStop();
+            }
 
             AddToLog("Проверка новой версии на удаленном сервере");
+
+            bool resp = VersionController.VersionChecker.IsNeedUpdateRemote(Version.vmVersion, Version.version);
             
-            VersionController.Response resp = VersionController.VersionChecker.UpdateRemote(Version.vmVersion, Version.version);
-            
+            if (resp)
+            {
+                AddToLog("Закрытие програмы для обновления");
+                System.Threading.Thread.Sleep(2000);
+                this.Close();
+            }
+
             remoteVersionChecker.Start();
 
-            if (!resp.isError)
+            if (wasRunning)
             {
-                if (resp.isFileLoadeed)
-                {
-                    AddToLog("Новая версия загружена с удаленного домена");
-
-                    if (VersionController.VersionChecker.UnzipProgram())
-                    {
-                        AddToLog("Обновление распаковано!");
-                        // file unzipped
-                        AddToLog("Попытка начать обновление, текущая (старая) версия: " + Version.version);
-                        if (VersionController.VersionChecker.StartUpdator())
-                        {
-                            this.Close();
-                        }
-                        else
-                        {
-                            AddToLog("Ошибка обновления!!!");
-                        }
-                    }
-                    else
-                    {
-                        // error unzipping
-                        AddToLog("Ошибка распаковки обновления!!!");
-                    }
-                }
-                else if (resp.message.IndexOf('.') != -1 && resp.message == Version.version)
-                {
-                    AddToLog("Клиент не нуждается в обновлении");
-                }
+                StartProgram();
+                this.iconClass.disableStart();
             }
-            else
-            {
-                AddToLog("Ошибка проверки версии: " + resp.message);
-            }
-
-            StartProgram();
-            this.iconClass.disableStart();
         }
-
+        
         void garbageTimer_Tick(object sender, EventArgs e)
         {
             GC.Collect();
@@ -168,7 +148,7 @@ namespace Atol
         {
             if (!File.Exists(configFile))
             {
-                return false;
+                SaveSettingsToFile();
             }
             TextReader reader = new StreamReader(configFile);
             bool result = false;
@@ -307,6 +287,8 @@ namespace Atol
             btnDisconnect.Enabled = true;
             btnSettings.Enabled = false;
             btnAtolSettings.Enabled = false;
+
+            isRunning = true;
         }
 
         public void StopProgram()
@@ -323,6 +305,8 @@ namespace Atol
                 btnAtolSettings.Enabled = true;
 
                 this.workerThread = null;
+
+                isRunning = true;
             }
         }
 
@@ -361,7 +345,8 @@ namespace Atol
                 lines = null;
             }
 
-            this.SaveSettingsToFile();
+            this.SaveSettingsToFile(); 
+            SetSettingsInfo();
         }
     }
 }
