@@ -30,6 +30,8 @@ namespace Atol
         Thread workerThread = null;
         private MyNotifyIcon iconClass = new MyNotifyIcon();
         public bool isRunning = false;
+        public const string UPDATOR_FILENAME = "vmUpdator2.exe";
+        public const string UPDATOR_UPDATE_FILENAME = "vmUpdator2_update.exe";
 
         public IContainer getComponents()
         {
@@ -73,7 +75,7 @@ namespace Atol
             garbageTimer.Start();
 
             remoteVersionChecker.Interval = 1000 * 60 * 10; // 10 mins
-            //remoteVersionChecker.Interval = 1000  * 5; // 10 mins
+            //remoteVersionChecker.Interval = 1000  * 5; // 5 sec // TODO: commend
             remoteVersionChecker.Tick += new EventHandler(remoteVersionChecker_Tick);
             remoteVersionChecker.Start();
 
@@ -83,40 +85,27 @@ namespace Atol
                 this.iconClass.disableStart();
                 this.iconClass.showHideForm();
             }
+
+            CheckForUpdatorUpdates();
+        }
+
+        private void CheckForUpdatorUpdates()
+        {
+            if (File.Exists(UPDATOR_UPDATE_FILENAME) && File.Exists(UPDATOR_FILENAME))
+	        {
+                File.Delete(UPDATOR_FILENAME);
+
+                if (!File.Exists(UPDATOR_FILENAME))
+                {
+                    File.Move(UPDATOR_UPDATE_FILENAME, UPDATOR_FILENAME);
+                    AddToLog("Обновление обновлятора завершено");
+                }
+	        }            
         }
         
         void remoteVersionChecker_Tick(object sender, EventArgs e)
         {
-            remoteVersionChecker.Stop();
-
-            bool wasRunning = isRunning;
-
-            if (isRunning)
-            {
-                AddToLog("Остановка рабочего потока для проверки версии");
-
-                StopProgram();
-                this.iconClass.disableStop();
-            }
-
-            AddToLog("Проверка новой версии на удаленном сервере");
-
-            bool resp = VersionController.VersionChecker.IsNeedUpdateRemote(Version.vmVersion, Version.version);
-            
-            if (resp)
-            {
-                AddToLog("Закрытие програмы для обновления");
-                System.Threading.Thread.Sleep(2000);
-                this.Close();
-            }
-
-            remoteVersionChecker.Start();
-
-            if (wasRunning)
-            {
-                StartProgram();
-                this.iconClass.disableStart();
-            }
+            worker.isNeedCheckRemoteVersion = true;
         }
         
         void garbageTimer_Tick(object sender, EventArgs e)

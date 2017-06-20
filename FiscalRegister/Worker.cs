@@ -19,6 +19,7 @@ namespace Atol
         private int longPoolingSleepInterval = 1000 * 5;        
         public bool isConnectedToRegister = false;
         public bool isNeedIterrupt = false;
+        public bool isNeedCheckRemoteVersion = false;
         private string[] errorResponses = { "no_data", "wrong_clinic", "wrong_api", "wrong_params", "no_params", "need_update_local", "need_check_version_remote" };
                             
         public Worker()
@@ -170,8 +171,6 @@ namespace Atol
         {
             AddToLog("Проверка новой версии на локальном сервере");
 
-            this.mainForm.remoteVersionChecker.Stop();
-
             bool resp = VersionController.VersionChecker.IsNeedUpdateLocal(this.settings.FullUrl, this.settings.ApiKey);
 
             if (resp)
@@ -180,27 +179,23 @@ namespace Atol
                 System.Threading.Thread.Sleep(2000);
                 this.mainForm.Close();
             }
-
-            this.mainForm.remoteVersionChecker.Start();
         }
 
-        private void TryRemoteCheckUpdate()
+        private bool TryRemoteCheckUpdate()
         {
             AddToLog("Проверка новой версии на удаленном сервере");
-
-            this.mainForm.remoteVersionChecker.Stop();
 
             bool resp = VersionController.VersionChecker.IsNeedUpdateRemote(Version.vmVersion, Version.version);
 
             if (resp)
             {
                 AddToLog("Закрытие програмы для обновления");
-                System.Threading.Thread.Sleep(2000);
+                System.Threading.Thread.Sleep(1000);
                 this.mainForm.Close();
-                return;
+                return true;
             }
 
-            this.mainForm.remoteVersionChecker.Start();
+            return false;
         }
 
         private FprnM8Class getDevice()
@@ -323,6 +318,18 @@ namespace Atol
                 {
                     AddToLog("Остановка рабочего потока");
                     return;
+                }
+
+                if (isNeedCheckRemoteVersion)
+                {
+                    AddToLog("Проверка новой версии по таймеру");
+
+                    if (TryRemoteCheckUpdate())
+                    {
+                        return;
+                    }
+
+                    isNeedCheckRemoteVersion = false;
                 }
 
                 if (!this.IsDeviceWorking())
