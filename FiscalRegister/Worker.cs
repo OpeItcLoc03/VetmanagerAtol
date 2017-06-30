@@ -7,6 +7,8 @@ using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using FprnM1C;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Atol
 {
@@ -15,11 +17,14 @@ namespace Atol
         public bool isDone = false;
         public VMSettings settings = new VMSettings();
         public MainForm mainForm = null;
-        private int sleepInterval = 1000 * 15 ;
-        private int longPoolingSleepInterval = 1000 * 5;        
+        private int RABBIT_RECCON_COUNT = 0;
+        public int PRINTER_CHECK_INFO_COUNT = 180;
+        private int checkConnectionInterval = 1000 * 20;   // 20 sec      
         public bool isConnectedToRegister = false;
         public bool isNeedIterrupt = false;
         public bool isNeedCheckRemoteVersion = false;
+        public string rabbitExchange = "";
+        public IConnection rabbitConnection;
         private string[] errorResponses = { "no_data", "wrong_clinic", "wrong_api", "wrong_params", "no_params", "need_update_local", "need_check_version_remote" };
                             
         public Worker()
@@ -31,8 +36,8 @@ namespace Atol
         {
             string key = DateTime.Now.ToUniversalTime().GetHashCode().ToString();
             MyWebProxy wp = new MyWebProxy(settings.FullUrl + "?key=" + key, settings.ApiKey);
-            AddToLog("Проверка соединения с "+ settings.Url);
             WebResult res = wp.checkConnection();
+            string logText = "Проверка соединения с " + settings.Url;
 
             wp = null;
 
@@ -40,7 +45,7 @@ namespace Atol
             {
                 if (res.data.IndexOf("connection_succesfull") != -1)
                 {
-                    AddToLog("Соединено успешно");
+                    AddToLog(logText + ": успешно");
 
                     string[] args = res.data.Split(':');
 
@@ -79,7 +84,7 @@ namespace Atol
                 return true;
             }
 
-            AddToLog("Ошибка соединения");
+            AddToLog(logText + ": Ошибка соединения");
             return false;
         }
 
@@ -222,7 +227,7 @@ namespace Atol
                     atolDriver.DeviceEnabled = true;
                     atolDriver.SetSettings();
 
-                    AddToLog("Создание обьекта драйвера: успешно");
+                    //AddToLog("Создание обьекта драйвера: успешно");
 
                     return atolDriver;
                 }
@@ -268,44 +273,205 @@ namespace Atol
             isNeedIterrupt = false;
             this.isConnectedToRegister = false;
 
-            if (this.IsDeviceWorking())
+            if (this.CheckVetmanagerConnection())
             {
-                if (this.CheckVetmanagerConnection())
+                if (this.IsDeviceWorking())
                 {
+                    if (rabbitExchange == "")
+                    {
+                        rabbitExchange = this.getExchange();
+                        AddToLog("Exchange получен: " + rabbitExchange);
+                    }
+
+                    this.InitRabbitConnection(rabbitExchange);
                     this.DoJob();
                 }
                 else
                 {
-                    AddToLog("Нет соединения с ветменеджер");
+                    AddToLog("Устройство не работает");
                     isError = true;
                 }
             }
             else
             {
-                AddToLog("Устройство не работает");
+                AddToLog("Нет соединения с ветменеджер");
                 isError = true;
             }
 
             if (isError)
             {
-                System.Threading.Thread.Sleep(sleepInterval);
+                System.Threading.Thread.Sleep(checkConnectionInterval);
                 StartWork();
+            }
+        }
+
+        private string getExchange()
+        {
+            string key = DateTime.Now.ToUniversalTime().GetHashCode().ToString();
+            MyWebProxy wp = new MyWebProxy(settings.FullUrl + "?key=" + key, settings.ApiKey);
+            AddToLog("Получение ключа rabbitMQ");
+            WebResult res = wp.getExchange();
+
+            wp = null;
+
+            if (!res.isError && res.data != "wrong_params")
+            {
+                return res.data + ".onlinecassa";
+            }
+
+            return "";
+        }
+
+        private void InitRabbitConnection(string exchange)
+        {
+            if (exchange == "")
+            {
+                throw new Exception("no exchange set");
+            }
+
+            string nameAndPass = Encoding.UTF8.GetString(Convert.FromBase64String("dm1jbGllbnQ ="));
+            string host = Encoding.UTF8.GetString(Convert.FromBase64String("NzguNDcuMjQ4LjEyNg =="));
+
+            try
+            {
+                var factory = new ConnectionFactory()
+                {
+                    UserName = nameAndPass,
+                    Password = nameAndPass,
+                    VirtualHost = "/vm",
+                    HostName = host,
+                    Port = 5672,
+                    RequestedHeartbeat = 20
+                };
+
+                rabbitConnection = factory.CreateConnection();
+                var channel = rabbitConnection.CreateModel();
+                var consumer = new EventingBasicConsumer(channel);
+
+                consumer.Received += new BasicDeliverEventHandler(consumer_Received);
+                channel.BasicConsume(exchange, true, consumer);
+                //channel.BasicConsume("vm.gen.1d0258c2440a8d19e716292b231e3190:1.onlinecassa", true, consumer);
+                AddToLog("Подключение к rabbit успешно");
+            }
+            catch (Exception err)
+            {
+                AddToLog("Ошибка создания подключения: " + err.Message);
+            }            
+        }
+
+        void consumer_Received(IBasicConsumer sender, BasicDeliverEventArgs args)
+        {
+            var body = args.Body;
+            var message = Encoding.UTF8.GetString(body);
+
+            AddToLog("From rabbit: " + message);
+            
+            try
+            {
+                List<WebResult> results = new List<WebResult>();
+                string jsonString = message.Replace('"', '\'');
+                JObject dataString = JObject.Parse(jsonString);
+
+                if (dataString != null)
+                {
+                    foreach (JObject item in dataString["data"])
+                    {
+                        if (settings.ApiKey == item["api_key"].ToString())
+                        {
+                            WebResult result = new WebResult();
+                            result.data = null;
+                            int runCount = 0;
+
+                            while (true)
+                            {
+                                result = this.PrintDataByParams(
+                                    item["id"].ToString()
+                                    , int.Parse(this.settings.Device.Model)
+                                    , item["data"]
+                                    , item["event_name"].ToString()
+                                    , runCount);
+
+                                runCount++;
+
+                                if (!result.isError)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    if (result.lastErrorMessage.IndexOf("Нет бумаги") != -1)
+                                    {
+                                        System.Threading.Thread.Sleep(10 * 1000);
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        if (runCount < 3 && result.lastErrorMessage.IndexOf("Открыт чек продажи/покупки - операция невозможна") != -1)
+                                        {
+                                            continue;
+                                        }
+                                        else if (runCount < 3 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: В экземпляре объекта не задана ссылка на объект") != -1)
+                                        {
+                                            continue;
+                                        }
+                                        else if (runCount > -1 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: Необходимо сделать Z-отчет") != -1)
+                                        {
+                                            JObject subData = JObject.Parse("{userFIO: \"кассир\"}");
+                                            WebResult subRes = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), subData, "smenaEnd", -2);
+
+                                            if (subRes.lastErrorMessage != null && subRes.data != null && subRes.data == "" && subRes.isError == false)
+                                            {
+                                                continue;
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            }
+
+                            results.Add(result);
+                        }
+                        else
+                        {
+                            AddToLog("Ошибка: не совпадает API KEY !!!");
+                        }
+                    }
+                }
+
+                dataString = null;
+                jsonString = null;
+
+                if (results.Count > 0)
+                {
+                    this.SendResponseData(results);
+                }
+            }
+            catch (Exception err)
+            {
+                AddToLog("Ошибка обработки данных: " + err.Message);
             }
         }
 
         private bool IsDeviceWorking()
         {
-            AddToLog("Проверка работы принтера");
-
-            if (this.settings.Device.Model == null) 
+            if (this.settings.Device.Model == null)
             {
                 AddToLog("Не указаны настройки принтера");
                 return false;
             }
 
-            WebResult res = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), null, "get_status", 0);
+            if (PRINTER_CHECK_INFO_COUNT++ >= 180)  // раз в час
+            {
+                AddToLog("Проверка работы принтера");
+                PRINTER_CHECK_INFO_COUNT = 0;
 
-            return !res.isError;
+                WebResult res = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), null, "get_status", 0);
+
+                return !res.isError;
+            }
+
+            return true;
         }
 
         private void DoJob()
@@ -334,121 +500,47 @@ namespace Atol
 
                 if (!this.IsDeviceWorking())
                 {
-                    System.Threading.Thread.Sleep(sleepInterval); // 15 sek
+                    System.Threading.Thread.Sleep(checkConnectionInterval); // 20 sek
                     DoJob();
                     return;
                 }
 
-                try
-                {    
-                    AddToLog("Попытка получить данные для печати");
-
-                    List<WebResult> results = new List<WebResult>();
-                    WebResult wr = this.GetUnsendedData(); // 20 sek max long pooling
-
-                    if (!wr.isError && wr.data.Length > 0)
+                if (this.CheckVetmanagerConnection())
+                {
+                    if (rabbitExchange == "")
                     {
-                        if (isErrorResponse(wr.data.ToString()))
-                        {
-                            AddToLog("Нет данных или ошибка ответа: " + wr.data.ToString());
-                        }
-                        else
-                        {
-                            try
-                            {
-                                string jsonString = @wr.data.Replace('"', '\'');
-                                JObject dataString = JObject.Parse(jsonString);
+                        rabbitExchange = this.getExchange();
+                        AddToLog("Exchange получен: " + rabbitExchange); 
+                        this.InitRabbitConnection(rabbitExchange);
+                    }
+                }
 
-                                if (dataString != null)
-                                {
-                                    foreach (JObject item in dataString["data"])
-                                    {
-                                        if (settings.ApiKey == item["api_key"].ToString())
-                                        {
-                                            WebResult result = new WebResult();
-                                            result.data = null;
-                                            int runCount = 0;
-
-                                            while (true)
-                                            {
-                                                result = this.PrintDataByParams(
-                                                    item["id"].ToString()
-                                                    , int.Parse(this.settings.Device.Model)
-                                                    , item["data"]
-                                                    , item["event_name"].ToString()
-                                                    , runCount);
-
-                                                runCount++; 
-
-                                                if (!result.isError) 
-                                                {
-                                                    break;
-                                                } 
-                                                else 
-                                                {
-                                                    if (result.lastErrorMessage.IndexOf("Нет бумаги") != -1)
-                                                    {
-                                                        System.Threading.Thread.Sleep(10 * 1000);
-                                                        continue;
-                                                    }
-                                                    else
-                                                    {
-                                                        if (runCount < 3 && result.lastErrorMessage.IndexOf("Открыт чек продажи/покупки - операция невозможна") != -1)
-                                                        {
-                                                            continue;
-                                                        }
-                                                        else if (runCount < 3 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: В экземпляре объекта не задана ссылка на объект") != -1)
-                                                        {
-                                                            continue;
-                                                        }
-                                                        else if (runCount > -1 && result.lastErrorMessage.IndexOf("Ошибка обработки данных: Необходимо сделать Z-отчет") != -1)
-                                                        {
-                                                            JObject subData = JObject.Parse("{userFIO: \"кассир\"}");
-                                                            WebResult subRes = this.PrintDataByParams("0", int.Parse(this.settings.Device.Model), subData, "smenaEnd", -2);
-
-                                                            if (subRes.lastErrorMessage != null && subRes.data != null && subRes.data == "" && subRes.isError == false)
-                                                            {
-                                                                continue;
-                                                            }
-                                                        }
-                                                    }
-
-                                                    break;
-                                                }
-                                            }
-
-                                            results.Add(result);
-                                        }
-                                        else
-                                        {
-                                            AddToLog("Ошибка: не совпадает API KEY !!!");
-                                        }
-                                    }
-                                }
-
-                                dataString = null;
-                                jsonString = null;
-                            }
-                            catch (Exception err)
-                            {
-                                AddToLog("Ошибка обработки данных: " + err.Message);
-                            }
-                        }
-                    } 
-                    
-                    if (results.Count > 0)
+                if (rabbitConnection == null || (rabbitConnection != null && !rabbitConnection.IsOpen))
+                {
+                    AddToLog("Заново стартуем подключение к rabbit");
+                    if (rabbitExchange == "")
                     {
-                        this.SendResponseData(results);
+                        rabbitExchange = this.getExchange();
+                        AddToLog("Exchange получен: " + rabbitExchange);
                     }
 
-                    results = null;
-                }
-                catch (Exception err)
-                {
-                    AddToLog("Ошибка: " + err.Message);
+                    this.InitRabbitConnection(rabbitExchange);
                 }
 
-                System.Threading.Thread.Sleep(longPoolingSleepInterval); // 5 sek 
+                if (RABBIT_RECCON_COUNT++ >= 180) // раз в час
+                {
+                    AddToLog("Переподключение к rabbit, раз в час");
+                    RABBIT_RECCON_COUNT = 0;
+
+                    if (rabbitConnection != null && rabbitConnection.IsOpen)
+                    {
+                        rabbitConnection.Close();
+                    }
+
+                    this.InitRabbitConnection(rabbitExchange);
+                }
+
+                System.Threading.Thread.Sleep(checkConnectionInterval); // 20 sek 
             }
         }
 

@@ -24,3 +24,4 @@ D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\Ionic.Zip.dll
 D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\VersionController.dll
 D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\VersionController.pdb
 D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\vmUpdator2.exe
+D:\Projects\AtolFiscalRegister\FiscalRegister\bin\Release\RabbitMQ.Client.dll

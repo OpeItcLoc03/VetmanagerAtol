@@ -77,6 +77,11 @@ namespace Atol
             return this.getDataByAction("check_connection", null);
         }
 
+        public WebResult getExchange()
+        {
+            return this.getDataByAction("get_exchanges_list", null);
+        }
+
         internal WebResult getUnsendedData()
         {
             return this.getDataByAction("get_unsended_data", null);

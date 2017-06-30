@@ -108,6 +108,18 @@ namespace Atol
             {
                 if (res.data.IndexOf("connection_succesfull") != -1)
                 {
+                    mainForm.AddToLog("Соединено успешно");
+                    MessageBox.Show("Соединено успешно", "Системное сообщение");
+
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+                }
+                else if (res.data.IndexOf("need_update_local:") != -1)
+                {
                     string[] args = res.data.Split(':');
 
                     if (args.Length == 2)
@@ -115,8 +127,27 @@ namespace Atol
                         Version.vmVersion = args[1].ToString();
                     }
 
-                    mainForm.AddToLog("Соединено успешно");
-                    MessageBox.Show("Соединено успешно", "Системное сообщение");
+                    res.data = "need_update_local";
+                    mainForm.AddToLog("Соединено успешно, необходимо обновление");
+                    MessageBox.Show("Соединено успешно, необходимо обновление", "Системное сообщение");
+                }
+                else if (res.data.IndexOf("need_check_version_remote:") != -1)
+                {
+                    string[] args = res.data.Split(':');
+
+                    if (args.Length == 2)
+                    {
+                        Version.vmVersion = args[1].ToString();
+                    }
+
+                    res.data = "need_check_version_remote";
+                    mainForm.AddToLog("Соединено успешно, необходимо обновление");
+                    MessageBox.Show("Соединено успешно, необходимо обновление", "Системное сообщение");
+                }
+                else if (res.data == "wrong_api")
+                {
+                    mainForm.AddToLog("Не верный апи");
+                    MessageBox.Show("Не верный апи", "Системное сообщение");
                 }
             }
             else

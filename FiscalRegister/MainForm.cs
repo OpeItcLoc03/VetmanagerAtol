@@ -21,7 +21,7 @@ namespace Atol
         public VMSettings settings = new VMSettings();
         public const string configFile = "config.xml";
         public const string logFile = "log.txt";
-        public const long maxLogSize = 10 * 1024 * 1024; // 10 MB
+        public const long maxLogSize = 2 * 1024 * 1024; // 2 MB
         public bool LastError = false;
         public System.Windows.Forms.Timer memoryTimer = new System.Windows.Forms.Timer();
         public System.Windows.Forms.Timer garbageTimer = new System.Windows.Forms.Timer();
@@ -266,39 +266,6 @@ namespace Atol
             this.iconClass.disableStart();
         }
 
-        public void StartProgram()
-        {
-            worker.isNeedIterrupt = false;
-            this.workerThread = new Thread(new ThreadStart(worker.StartWork));
-            this.workerThread.Start();
-
-            btnConnect.Enabled = false;
-            btnDisconnect.Enabled = true;
-            btnSettings.Enabled = false;
-            btnAtolSettings.Enabled = false;
-
-            isRunning = true;
-        }
-
-        public void StopProgram()
-        {
-            if (this.workerThread != null)
-            {
-                worker.isNeedIterrupt = true;
-                this.workerThread.Abort();
-                AddToLog("Stop worker thread");
-
-                btnConnect.Enabled = true;
-                btnDisconnect.Enabled = false;
-                btnSettings.Enabled = true;
-                btnAtolSettings.Enabled = true;
-
-                this.workerThread = null;
-
-                isRunning = true;
-            }
-        }
-
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
             StopProgram();
@@ -337,5 +304,47 @@ namespace Atol
             this.SaveSettingsToFile(); 
             SetSettingsInfo();
         }
+        
+
+        public void StartProgram()
+        {
+            worker.PRINTER_CHECK_INFO_COUNT = 180;
+            worker.isNeedIterrupt = false;
+
+            this.workerThread = new Thread(new ThreadStart(worker.StartWork));
+            this.workerThread.Start();
+
+            btnConnect.Enabled = false;
+            btnDisconnect.Enabled = true;
+            btnSettings.Enabled = false;
+            btnAtolSettings.Enabled = false;
+
+            isRunning = true;
+        }
+
+        public void StopProgram()
+        {
+            if (this.workerThread != null)
+            {
+                if (worker.rabbitConnection != null && worker.rabbitConnection.IsOpen)
+                {
+                    worker.rabbitConnection.Close();
+                }
+
+                worker.isNeedIterrupt = true;
+                this.workerThread.Abort();
+                AddToLog("Stop worker thread");
+
+                btnConnect.Enabled = true;
+                btnDisconnect.Enabled = false;
+                btnSettings.Enabled = true;
+                btnAtolSettings.Enabled = true;
+
+                this.workerThread = null;
+
+                isRunning = true;
+            }
+        }
+
     }
 }
